@@ -18,6 +18,21 @@ test("serves existing static assets without a fallback", async () => {
   assert.deepEqual(calls, ["/assets/app.js"]);
 });
 
+test("prevents the app shell from being served stale after deployment", async () => {
+  const response = await worker.fetch(new Request("https://example.test/"), {
+    ASSETS: {
+      fetch: async () => new Response("app", {
+        status: 200,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      }),
+    },
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "no-cache, no-store, must-revalidate");
+  assert.equal(response.headers.get("expires"), "0");
+});
+
 test("falls back to index.html for an unknown app route", async () => {
   const calls = [];
   const response = await worker.fetch(
@@ -29,8 +44,10 @@ test("falls back to index.html for an unknown app route", async () => {
         fetch: async (request) => {
           const url = new URL(request.url);
           calls.push(url.pathname + url.search);
-          return new Response(url.pathname === "/index.html" ? "app" : "missing", {
-            status: url.pathname === "/index.html" ? 200 : 404,
+          const isAppShell = url.pathname === "/index.html";
+          return new Response(isAppShell ? "app" : "missing", {
+            status: isAppShell ? 200 : 404,
+            headers: isAppShell ? { "content-type": "text/html; charset=utf-8" } : undefined,
           });
         },
       },
@@ -38,6 +55,7 @@ test("falls back to index.html for an unknown app route", async () => {
   );
 
   assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "no-cache, no-store, must-revalidate");
   assert.deepEqual(calls, ["/flow/step-two?source=share", "/index.html"]);
 });
 
