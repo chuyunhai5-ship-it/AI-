@@ -147,7 +147,7 @@ function StartScreen({ onStart, bankSize, roundCount }) {
     <section className="start-screen">
       <div className="start-copy">
         <span className="eyebrow">趣 C · AI 编程第一课</span>
-        <h1>李白诗词问答大闯关</h1>
+        <h1>AI问答大闯关</h1>
         <div className="start-settings">
           <span><SlidersHorizontal weight="bold" />主题：古诗词</span>
           <span><GraduationCap weight="bold" />判题风格：鼓励型</span>
