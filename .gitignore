@@ -3,3 +3,9 @@ dist/
 .DS_Store
 *.log
 *.tgz
+.env
+.env.*
+!.env.example
+outputs/li-bai-voice-previews*/
+outputs/li-bai-performance*/
+outputs/li-bai-question-audio/

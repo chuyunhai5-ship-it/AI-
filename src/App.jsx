@@ -26,7 +26,17 @@ const CODE_LINES = [
   { key: "loop", text: "for (int i = 0; i < 5; i++) { ... }" },
 ];
 
+let activeAudio = null;
+
+function stopActiveAudio() {
+  if (!activeAudio) return;
+  activeAudio.pause();
+  activeAudio.currentTime = 0;
+  activeAudio = null;
+}
+
 function speak(text) {
+  stopActiveAudio();
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
@@ -34,6 +44,34 @@ function speak(text) {
   utterance.rate = 0.92;
   utterance.pitch = 1;
   window.speechSynthesis.speak(utterance);
+}
+
+function playQuestionAudio(question) {
+  if (!question?.id) return;
+  window.speechSynthesis?.cancel();
+  stopActiveAudio();
+
+  const audio = new Audio(`/audio/li-bai/questions/${question.id}.mp3`);
+  activeAudio = audio;
+  audio.preload = "auto";
+
+  let usedFallback = false;
+  const fallback = () => {
+    if (usedFallback || activeAudio !== audio) return;
+    usedFallback = true;
+    activeAudio = null;
+    speak(question.prompt);
+  };
+
+  audio.addEventListener(
+    "ended",
+    () => {
+      if (activeAudio === audio) activeAudio = null;
+    },
+    { once: true },
+  );
+  audio.addEventListener("error", fallback, { once: true });
+  audio.play().catch(fallback);
 }
 
 function Stepper({ phase }) {
@@ -273,9 +311,9 @@ export function App() {
           <button
             className="speaker-button"
             type="button"
-            onClick={() => speak(question.prompt)}
+            onClick={() => playQuestionAudio(question)}
             aria-label="重听题目"
-            title="重听题目"
+            title="播放李白出题语音"
           >
             <SpeakerHigh weight="fill" />
           </button>

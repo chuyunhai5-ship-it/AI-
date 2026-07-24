@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { QUESTION_BANK, ROUND_COUNT, sampleQuestions } from "../src/questions.js";
@@ -67,4 +68,16 @@ test("sampling never mutates the original question bank", () => {
   const originalOrder = QUESTION_BANK.map((question) => question.id);
   sampleQuestions(ROUND_COUNT, seededRandom(99));
   assert.deepEqual(QUESTION_BANK.map((question) => question.id), originalOrder);
+});
+
+test("every question has a generated Li Bai MP3", async () => {
+  for (const question of QUESTION_BANK) {
+    const audioUrl = new URL(
+      `../public/audio/li-bai/questions/${question.id}.mp3`,
+      import.meta.url,
+    );
+    const audio = await readFile(audioUrl);
+    assert.ok(audio.length > 20_000, `${question.id} audio is unexpectedly small`);
+    assert.equal(audio.subarray(0, 3).toString("ascii"), "ID3");
+  }
 });
