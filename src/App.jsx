@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowCounterClockwise,
@@ -26,17 +26,7 @@ const CODE_LINES = [
   { key: "loop", text: "for (int i = 0; i < 5; i++) { ... }" },
 ];
 
-let activeAudio = null;
-
-function stopActiveAudio() {
-  if (!activeAudio) return;
-  activeAudio.pause();
-  activeAudio.currentTime = 0;
-  activeAudio = null;
-}
-
 function speak(text) {
-  stopActiveAudio();
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
@@ -46,32 +36,8 @@ function speak(text) {
   window.speechSynthesis.speak(utterance);
 }
 
-function playQuestionAudio(question) {
-  if (!question?.id) return;
-  window.speechSynthesis?.cancel();
-  stopActiveAudio();
-
-  const audio = new Audio(`/audio/li-bai/questions/${question.id}.mp3`);
-  activeAudio = audio;
-  audio.preload = "auto";
-
-  let usedFallback = false;
-  const fallback = () => {
-    if (usedFallback || activeAudio !== audio) return;
-    usedFallback = true;
-    activeAudio = null;
-    speak(question.prompt);
-  };
-
-  audio.addEventListener(
-    "ended",
-    () => {
-      if (activeAudio === audio) activeAudio = null;
-    },
-    { once: true },
-  );
-  audio.addEventListener("error", fallback, { once: true });
-  audio.play().catch(fallback);
+function questionAudioUrl(question) {
+  return `/audio/li-bai/questions/${question.id}.mp3`;
 }
 
 function Stepper({ phase }) {
@@ -229,9 +195,95 @@ export function App() {
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [teachingOpen, setTeachingOpen] = useState(false);
+  const [audioStatus, setAudioStatus] = useState("idle");
+  const questionAudioRef = useRef(null);
+  const playbackTokenRef = useRef(0);
 
   const question = questions[round];
   const progress = useMemo(() => `${round + 1} / ${questions.length}`, [round, questions.length]);
+
+  const stopQuestionAudio = useCallback(() => {
+    playbackTokenRef.current += 1;
+    const player = questionAudioRef.current;
+    if (player) {
+      player.pause();
+      player.currentTime = 0;
+      player.muted = false;
+    }
+    setAudioStatus("idle");
+  }, []);
+
+  const primeQuestionAudio = useCallback((nextQuestion) => {
+    const player = questionAudioRef.current;
+    if (!player || !nextQuestion?.id) return;
+
+    const token = playbackTokenRef.current + 1;
+    playbackTokenRef.current = token;
+    player.pause();
+    player.src = questionAudioUrl(nextQuestion);
+    player.preload = "auto";
+    player.playsInline = true;
+    player.muted = true;
+    player.load();
+
+    const primePromise = player.play();
+    if (!primePromise) return;
+    primePromise
+      .then(() => {
+        if (playbackTokenRef.current !== token) return;
+        player.pause();
+        player.currentTime = 0;
+        player.muted = false;
+        setAudioStatus("ready");
+      })
+      .catch(() => {
+        if (playbackTokenRef.current !== token) return;
+        player.muted = false;
+        setAudioStatus("ready");
+      });
+  }, []);
+
+  const playQuestionAudio = useCallback((currentQuestion) => {
+    const player = questionAudioRef.current;
+    if (!player || !currentQuestion?.id) {
+      speak(currentQuestion?.prompt || "");
+      return;
+    }
+
+    window.speechSynthesis?.cancel();
+    const token = playbackTokenRef.current + 1;
+    playbackTokenRef.current = token;
+    let usedFallback = false;
+
+    const fallback = () => {
+      if (usedFallback || playbackTokenRef.current !== token) return;
+      usedFallback = true;
+      setAudioStatus("fallback");
+      speak(currentQuestion.prompt);
+    };
+
+    player.pause();
+    player.muted = false;
+    player.volume = 1;
+    player.src = questionAudioUrl(currentQuestion);
+    player.preload = "auto";
+    player.playsInline = true;
+    player.onerror = fallback;
+    player.onended = () => {
+      if (playbackTokenRef.current === token) setAudioStatus("ready");
+    };
+    player.load();
+    setAudioStatus("loading");
+
+    const playPromise = player.play();
+    if (playPromise) {
+      playPromise
+        .then(() => {
+          if (playbackTokenRef.current === token) setAudioStatus("playing");
+        })
+        .catch(fallback);
+    }
+  }, []);
 
   useEffect(() => {
     if (!started || phase !== "loading") return undefined;
@@ -241,18 +293,35 @@ export function App() {
     return () => window.clearTimeout(timer);
   }, [started, round, phase]);
 
+  useEffect(() => {
+    if (!started || phase !== "answering") return;
+    playQuestionAudio(question);
+  }, [started, round, phase, question, playQuestionAudio]);
+
+  useEffect(
+    () => () => {
+      playbackTokenRef.current += 1;
+      questionAudioRef.current?.pause();
+      window.speechSynthesis?.cancel();
+    },
+    [],
+  );
+
   function startGame() {
-    setQuestions(sampleQuestions());
+    const nextQuestions = sampleQuestions();
+    setQuestions(nextQuestions);
     setRound(0);
     setScore(0);
     setSelected(null);
     setFeedback(null);
     setPhase("loading");
     setStarted(true);
+    primeQuestionAudio(nextQuestions[0]);
   }
 
   function submitAnswer() {
     if (selected === null || phase !== "answering") return;
+    stopQuestionAudio();
     setPhase("judging");
     window.setTimeout(() => {
       const judgeFeedback = buildJudgeFeedback(question, selected);
@@ -264,33 +333,52 @@ export function App() {
 
   function nextRound() {
     if (round === questions.length - 1) {
+      stopQuestionAudio();
       setPhase("complete");
       return;
     }
+    primeQuestionAudio(questions[round + 1]);
     setRound((value) => value + 1);
     setSelected(null);
     setFeedback(null);
     setPhase("loading");
   }
 
+  const audioPlayer = (
+    <audio
+      ref={questionAudioRef}
+      preload="auto"
+      playsInline
+      aria-hidden="true"
+    />
+  );
+
   if (!started) {
     return (
-      <main className="app-shell">
-        <StartScreen onStart={startGame} />
-      </main>
+      <>
+        {audioPlayer}
+        <main className="app-shell">
+          <StartScreen onStart={startGame} />
+        </main>
+      </>
     );
   }
 
   if (phase === "complete") {
     return (
-      <main className="app-shell">
-        <ResultScreen score={score} total={questions.length} onReplay={startGame} />
-      </main>
+      <>
+        {audioPlayer}
+        <main className="app-shell">
+          <ResultScreen score={score} total={questions.length} onReplay={startGame} />
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="app-shell">
+    <>
+      {audioPlayer}
+      <main className="app-shell">
       <header className="topbar">
         <div className="brand-block">
           <span className="brand-kicker">趣 C · AI 编程</span>
@@ -309,10 +397,10 @@ export function App() {
 
         <section className={`question-panel ${phase === "feedback" ? "is-feedback" : ""}`}>
           <button
-            className="speaker-button"
+            className={`speaker-button ${audioStatus === "playing" ? "is-playing" : ""} ${audioStatus === "loading" ? "is-loading" : ""}`}
             type="button"
             onClick={() => playQuestionAudio(question)}
-            aria-label="重听题目"
+            aria-label={audioStatus === "playing" ? "李白正在读题" : "重听题目"}
             title="播放李白出题语音"
           >
             <SpeakerHigh weight="fill" />
@@ -360,7 +448,10 @@ export function App() {
                   <button
                     type="button"
                     className="feedback-speaker"
-                    onClick={() => speak(feedback.speechText)}
+                    onClick={() => {
+                      stopQuestionAudio();
+                      speak(feedback.speechText);
+                    }}
                     aria-label="朗读判题反馈"
                     title="朗读判题反馈"
                   >
@@ -418,6 +509,7 @@ export function App() {
       </footer>
 
       <TeachingDrawer open={teachingOpen} phase={phase} onClose={() => setTeachingOpen(false)} />
-    </main>
+      </main>
+    </>
   );
 }
