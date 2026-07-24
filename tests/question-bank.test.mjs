@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { QUESTION_BANK, ROUND_COUNT, sampleQuestions } from "../src/questions.js";
+import { buildJudgeFeedback } from "../src/judgeFeedback.js";
 
 function seededRandom(seed) {
   let state = seed >>> 0;
@@ -23,7 +24,30 @@ test("question bank contains 50 valid and unique questions", () => {
     assert.equal(question.options.length, 2);
     assert.ok(question.answer === 0 || question.answer === 1);
     assert.ok(question.options[question.answer].length > 0);
-    assert.ok(question.explanation.length > 0);
+    assert.equal(typeof question.explanation, "string");
+    assert.ok(question.explanation.trim().length >= 16);
+    assert.match(question.explanation, /^出自李白《.+》：/);
+  }
+});
+
+test("every question produces complete AI feedback for correct and wrong answers", () => {
+  for (const question of QUESTION_BANK) {
+    const correctFeedback = buildJudgeFeedback(question, question.answer, () => 0);
+    const wrongAnswer = question.answer === 0 ? 1 : 0;
+    const wrongFeedback = buildJudgeFeedback(question, wrongAnswer, () => 0.99);
+
+    assert.equal(correctFeedback.correct, true);
+    assert.equal(wrongFeedback.correct, false);
+
+    for (const feedback of [correctFeedback, wrongFeedback]) {
+      assert.equal(feedback.label, "AI 判题反馈");
+      assert.ok(feedback.title.length > 0);
+      assert.ok(feedback.verdict.length > 0);
+      assert.match(feedback.answerReview, /^正确答案：[AB]「.+」$/);
+      assert.equal(feedback.explanation, question.explanation);
+      assert.ok(feedback.coach.length > 0);
+      assert.match(feedback.speechText, /题目解析：.+学习建议：/);
+    }
   }
 });
 

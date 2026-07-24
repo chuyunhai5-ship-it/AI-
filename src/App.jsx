@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "@phosphor-icons/react";
 import { QUESTION_BANK, ROUND_COUNT, sampleQuestions } from "./questions.js";
+import { buildJudgeFeedback } from "./judgeFeedback.js";
 
 const CODE_LINES = [
   { key: "random", text: "vector<Question> quiz = randomChoice(questionBank, 5);" },
@@ -100,7 +101,7 @@ function CharacterPanel({ type, phase, feedback }) {
             : phase === "judging"
               ? "正在核对题目和你的选择"
               : phase === "feedback"
-                ? "解析已经送达"
+                ? "已核对选择、答案和题目解析"
                 : "你提交后将立即判题"}
         </p>
       </div>
@@ -223,13 +224,9 @@ export function App() {
     if (selected === null || phase !== "answering") return;
     setPhase("judging");
     window.setTimeout(() => {
-      const correct = selected === question.answer;
-      if (correct) setScore((value) => value + 1);
-      setFeedback({
-        correct,
-        title: correct ? "回答正确！" : "这一题差一点",
-        explanation: question.explanation,
-      });
+      const judgeFeedback = buildJudgeFeedback(question, selected);
+      if (judgeFeedback.correct) setScore((value) => value + 1);
+      setFeedback(judgeFeedback);
       setPhase("feedback");
     }, 900);
   }
@@ -283,7 +280,7 @@ export function App() {
       <section className="game-grid">
         <CharacterPanel type="host" phase={phase} feedback={feedback} />
 
-        <section className="question-panel">
+        <section className={`question-panel ${phase === "feedback" ? "is-feedback" : ""}`}>
           <button
             className="speaker-button"
             type="button"
@@ -327,11 +324,37 @@ export function App() {
           {phase === "feedback" ? (
             <div className={`feedback-panel ${feedback.correct ? "is-correct" : "is-wrong"}`}>
               <div className="feedback-copy">
-                {feedback.correct ? <CheckCircle weight="fill" /> : <XCircle weight="fill" />}
-                <div>
-                  <strong>{feedback.title}</strong>
-                  <p>{feedback.explanation}</p>
+                <div className="feedback-heading">
+                  {feedback.correct ? <CheckCircle weight="fill" /> : <XCircle weight="fill" />}
+                  <div>
+                    <span className="feedback-label">{feedback.label}</span>
+                    <strong>{feedback.title}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="feedback-speaker"
+                    onClick={() => speak(feedback.speechText)}
+                    aria-label="朗读判题反馈"
+                    title="朗读判题反馈"
+                  >
+                    <SpeakerHigh weight="fill" />
+                  </button>
                 </div>
+                <p className="feedback-verdict">{feedback.verdict}</p>
+                <dl className="feedback-details">
+                  <div>
+                    <dt>答案核对</dt>
+                    <dd>{feedback.answerReview}</dd>
+                  </div>
+                  <div>
+                    <dt>题目解析</dt>
+                    <dd>{feedback.explanation}</dd>
+                  </div>
+                  <div>
+                    <dt>学习建议</dt>
+                    <dd>{feedback.coach}</dd>
+                  </div>
+                </dl>
               </div>
               <button type="button" className="primary-button compact" onClick={nextRound}>
                 {round === questions.length - 1 ? "查看通关结果" : "进入下一关"}
