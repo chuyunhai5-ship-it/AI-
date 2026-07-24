@@ -445,19 +445,6 @@ export function App() {
                     <span className="feedback-label">{feedback.label}</span>
                     <strong>{feedback.title}</strong>
                   </div>
-                  <button
-                    type="button"
-                    className="feedback-speaker"
-                    onClick={() => {
-                      stopQuestionAudio();
-                      speak(feedback.speechText);
-                    }}
-                    aria-label="朗读判题反馈"
-                    title="朗读判题反馈"
-                  >
-                    <SpeakerHigh weight="fill" />
-                    <span>朗读反馈</span>
-                  </button>
                 </div>
                 <p className="feedback-answer">{feedback.answerReview}</p>
                 <div className="feedback-explanation">

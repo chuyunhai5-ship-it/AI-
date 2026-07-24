@@ -22,3 +22,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Li Bai host audio uses the selected original CosyVoice v3.5 Plus “乘风洒脱型” voice with the A performance direction: youthful, light, smiling, non-recital delivery, as if the poem is being spoken for the first time.
 - Keep the 50 generated Li Bai question MP3 files mapped by question ID under `public/audio/li-bai/questions/`; retain browser speech synthesis only as a playback fallback.
 - Prime the persistent in-page audio player from the Start/Next user gesture, automatically read each question once when it appears, and keep the speaker button as an explicit replay control.
+- Keep judging feedback visual-only; do not add a separate feedback read-aloud control.
