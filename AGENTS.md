@@ -16,3 +16,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Build the stable Mock-data version first; keep the AI/voice boundaries replaceable.
 - Preserve the dual-character command-center layout and the blue/white/orange classroom visual language.
 - Include a discreet teaching-demo toggle that reveals how `body1 → post → choice → body2 → post` maps to the visible game state.
+- Maintain a 50-question Li Bai poetry bank and sample 5 unique questions at the start of every new run to simulate AI-return randomness.

@@ -14,41 +14,10 @@ import {
   Trophy,
   XCircle,
 } from "@phosphor-icons/react";
-
-const QUESTIONS = [
-  {
-    prompt: "“举头望明月”的下一句是？",
-    options: ["低头思故乡", "疑是地上霜"],
-    answer: 0,
-    explanation: "这两句出自李白的《静夜思》：举头望明月，低头思故乡。",
-  },
-  {
-    prompt: "“桃花潭水深千尺”的下一句是？",
-    options: ["唯见长江天际流", "不及汪伦送我情"],
-    answer: 1,
-    explanation: "这是《赠汪伦》中的名句，用千尺潭水衬托朋友之间的深厚情谊。",
-  },
-  {
-    prompt: "“飞流直下三千尺”的下一句是？",
-    options: ["疑是银河落九天", "低头思故乡"],
-    answer: 0,
-    explanation: "这两句出自《望庐山瀑布》，把瀑布想象成从九天落下的银河。",
-  },
-  {
-    prompt: "《静夜思》的作者是谁？",
-    options: ["杜甫", "李白"],
-    answer: 1,
-    explanation: "《静夜思》是李白的代表作，写出了月夜里的思乡之情。",
-  },
-  {
-    prompt: "“两岸猿声啼不住”的下一句是？",
-    options: ["轻舟已过万重山", "孤帆一片日边来"],
-    answer: 0,
-    explanation: "这两句出自《早发白帝城》，表现小舟顺流而下的轻快。",
-  },
-];
+import { QUESTION_BANK, ROUND_COUNT, sampleQuestions } from "./questions.js";
 
 const CODE_LINES = [
+  { key: "random", text: "vector<Question> quiz = randomChoice(questionBank, 5);" },
   { key: "setup", text: 'map<string, string> body1 = { "system": "你是李白出题官..." };' },
   { key: "question", text: "string question = post(url, body1);" },
   { key: "choice", text: "string answer = choice();" },
@@ -167,22 +136,22 @@ function TeachingDrawer({ open, phase, onClose }) {
           </code>
         ))}
       </div>
-      <p className="teaching-note">同一套 map + post 骨架，分别让李白出题、让判题老师批改；for 负责重复 5 关。</p>
+      <p className="teaching-note">先从 50 道题库随机抽 5 道，再用 map + post 模拟李白出题和 AI 判题；for 负责重复 5 关。</p>
     </aside>
   );
 }
 
-function StartScreen({ onStart }) {
+function StartScreen({ onStart, bankSize, roundCount }) {
   return (
     <section className="start-screen">
       <div className="start-copy">
         <span className="eyebrow">趣 C · AI 编程第一课</span>
         <h1>李白诗词问答大闯关</h1>
-        <p>李白负责出题，AI判题老师负责批改。准备好连续挑战五关了吗？</p>
+        <p>李白每次从 {bankSize} 道题库随机抽取 {roundCount} 道，AI判题老师负责批改。准备好接受随机挑战了吗？</p>
         <div className="start-settings">
           <span><SlidersHorizontal weight="bold" />主题：古诗词</span>
           <span><GraduationCap weight="bold" />判题风格：鼓励型</span>
-          <span><Trophy weight="bold" />关卡：5关</span>
+          <span><Trophy weight="bold" />题库：{bankSize} 抽 {roundCount}</span>
         </div>
         <button type="button" className="primary-button start-button" onClick={onStart}>
           <Play weight="fill" />
@@ -197,14 +166,14 @@ function StartScreen({ onStart }) {
   );
 }
 
-function ResultScreen({ score, onReplay }) {
-  const title = score === 5 ? "诗词闯关王" : score >= 3 ? "诗词小侠客" : "诗词探索者";
+function ResultScreen({ score, total, onReplay }) {
+  const title = score === total ? "诗词闯关王" : score >= 3 ? "诗词小侠客" : "诗词探索者";
   return (
     <section className="result-screen">
       <div className="result-icon"><Trophy weight="fill" /></div>
       <span className="eyebrow">五关挑战完成</span>
       <h1>{title}</h1>
-      <p className="result-score"><strong>{score}</strong><span>/ 5</span></p>
+      <p className="result-score"><strong>{score}</strong><span>/ {total}</span></p>
       <p>你让李白AI连续出题，又请AI判题老师完成了每一轮批改。</p>
       <div className="result-proof">
         <span>两个 AI 职责</span>
@@ -220,6 +189,7 @@ function ResultScreen({ score, onReplay }) {
 }
 
 export function App() {
+  const [questions, setQuestions] = useState(() => sampleQuestions());
   const [started, setStarted] = useState(false);
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState("loading");
@@ -228,8 +198,8 @@ export function App() {
   const [feedback, setFeedback] = useState(null);
   const [teachingOpen, setTeachingOpen] = useState(false);
 
-  const question = QUESTIONS[round];
-  const progress = useMemo(() => `${round + 1} / ${QUESTIONS.length}`, [round]);
+  const question = questions[round];
+  const progress = useMemo(() => `${round + 1} / ${questions.length}`, [round, questions.length]);
 
   useEffect(() => {
     if (!started || phase !== "loading") return undefined;
@@ -240,6 +210,7 @@ export function App() {
   }, [started, round, phase]);
 
   function startGame() {
+    setQuestions(sampleQuestions());
     setRound(0);
     setScore(0);
     setSelected(null);
@@ -264,7 +235,7 @@ export function App() {
   }
 
   function nextRound() {
-    if (round === QUESTIONS.length - 1) {
+    if (round === questions.length - 1) {
       setPhase("complete");
       return;
     }
@@ -277,7 +248,11 @@ export function App() {
   if (!started) {
     return (
       <main className="app-shell">
-        <StartScreen onStart={startGame} />
+        <StartScreen
+          onStart={startGame}
+          bankSize={QUESTION_BANK.length}
+          roundCount={ROUND_COUNT}
+        />
       </main>
     );
   }
@@ -285,7 +260,7 @@ export function App() {
   if (phase === "complete") {
     return (
       <main className="app-shell">
-        <ResultScreen score={score} onReplay={startGame} />
+        <ResultScreen score={score} total={questions.length} onReplay={startGame} />
       </main>
     );
   }
@@ -359,7 +334,7 @@ export function App() {
                 </div>
               </div>
               <button type="button" className="primary-button compact" onClick={nextRound}>
-                {round === QUESTIONS.length - 1 ? "查看通关结果" : "进入下一关"}
+                {round === questions.length - 1 ? "查看通关结果" : "进入下一关"}
                 <ArrowRight weight="bold" />
               </button>
             </div>
@@ -381,10 +356,10 @@ export function App() {
       </section>
 
       <footer className="bottom-tools">
-        <div className="round-dots" aria-label={`当前第${round + 1}关，共${QUESTIONS.length}关`}>
-          {QUESTIONS.map((_, index) => (
+        <div className="round-dots" aria-label={`当前第${round + 1}关，共${questions.length}关`}>
+          {questions.map((item, index) => (
             <span
-              key={index}
+              key={item.id}
               className={`${index < round ? "is-done" : ""} ${index === round ? "is-active" : ""}`}
             >
               {index < round ? <Check weight="bold" /> : index + 1}

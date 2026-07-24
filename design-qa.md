@@ -45,7 +45,7 @@
 
 ### Content and behavior
 
-- Passed: Five questions are playable with mixed A/B correct-answer positions.
+- Passed: The 50-question bank samples five unique questions per run, with balanced A/B correct-answer positions across the bank.
 - Passed: Loading, answering, judging, correct feedback, wrong feedback, next round, completion, score, and replay states were exercised in the in-app browser.
 - Passed: “重听题目” invokes browser speech synthesis.
 - Passed: “教研演示” opens a code drawer and highlights the line corresponding to the current program phase.
@@ -65,6 +65,7 @@
 3. Tested correct and incorrect answers, judging transitions, completion, replay, responsive frames, and console output.
 4. Changed the question set from an all-A answer pattern to an A/B mix, then rebuilt and regression-tested the updated flow.
 5. Re-captured the final round-3 selected state and compared it side by side with the selected visual.
+6. Expanded the mock question bank to 50 items, added no-replacement sampling, and verified that replay produces a different random question set while preserving the five-round UI.
 
 ## Severity summary
 
