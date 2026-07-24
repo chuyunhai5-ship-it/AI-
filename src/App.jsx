@@ -327,23 +327,14 @@ export function App() {
                     title="朗读判题反馈"
                   >
                     <SpeakerHigh weight="fill" />
+                    <span>朗读反馈</span>
                   </button>
                 </div>
-                <p className="feedback-verdict">{feedback.verdict}</p>
-                <dl className="feedback-details">
-                  <div>
-                    <dt>答案核对</dt>
-                    <dd>{feedback.answerReview}</dd>
-                  </div>
-                  <div>
-                    <dt>题目解析</dt>
-                    <dd>{feedback.explanation}</dd>
-                  </div>
-                  <div>
-                    <dt>学习建议</dt>
-                    <dd>{feedback.coach}</dd>
-                  </div>
-                </dl>
+                <p className="feedback-answer">{feedback.answerReview}</p>
+                <div className="feedback-explanation">
+                  <strong>题目解析</strong>
+                  <p>{feedback.explanation}</p>
+                </div>
               </div>
               <button type="button" className="primary-button compact" onClick={nextRound}>
                 {round === questions.length - 1 ? "查看通关结果" : "进入下一关"}

@@ -590,11 +590,11 @@ body,
 
 .feedback-panel {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   align-items: flex-end;
   justify-content: space-between;
   margin-top: 12px;
-  padding: 16px 18px;
+  padding: 18px 20px;
   border: 2px solid #b7dac8;
   border-radius: 22px;
   background: rgba(239, 251, 245, 0.96);
@@ -612,15 +612,15 @@ body,
 
 .feedback-heading {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 34px;
-  gap: 11px;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 12px;
   align-items: center;
 }
 
 .feedback-heading > svg {
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   color: var(--green);
 }
 
@@ -630,18 +630,18 @@ body,
 
 .feedback-label {
   display: block;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
   color: #56806b;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 .feedback-heading strong {
   display: block;
   color: #237d53;
-  font-size: 16px;
-  line-height: 1.3;
+  font-size: 20px;
+  line-height: 1.25;
 }
 
 .feedback-panel.is-wrong .feedback-heading strong {
@@ -649,15 +649,19 @@ body,
 }
 
 .feedback-speaker {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  place-items: center;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 12px;
   border: 1px solid #a6cfba;
-  border-radius: 50%;
+  border-radius: 999px;
   background: #fff;
   color: #27895a;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -666,8 +670,8 @@ body,
 }
 
 .feedback-speaker svg {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
 }
 
 .feedback-panel.is-wrong .feedback-speaker {
@@ -675,45 +679,50 @@ body,
   color: #c24954;
 }
 
-.feedback-verdict {
-  margin: 8px 0 9px 45px;
-  color: #35566e;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.45;
+.feedback-answer {
+  margin: 12px 0 0 52px;
+  color: #244f6d;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.5;
 }
 
-.feedback-details {
+.feedback-explanation {
   display: grid;
-  gap: 5px;
-  margin: 0 0 0 45px;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin: 12px 0 0 52px;
+  padding: 12px 14px;
+  border: 1px solid rgba(123, 180, 151, 0.5);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
-.feedback-details > div {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 8px;
+.feedback-panel.is-wrong .feedback-explanation {
+  border-color: rgba(215, 135, 143, 0.52);
 }
 
-.feedback-details dt {
-  color: #2f789c;
-  font-size: 11px;
-  font-weight: 900;
+.feedback-explanation strong {
+  color: #2c7698;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
-.feedback-details dd {
+.feedback-explanation p {
   margin: 0;
-  color: #4b657d;
-  font-size: 11px;
-  line-height: 1.45;
+  color: #385972;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 .primary-button.compact {
   flex: 0 0 auto;
-  min-height: 48px;
-  padding: 0 17px;
+  min-height: 52px;
+  padding: 0 20px;
   border-width: 2px;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .bottom-tools {
@@ -1019,6 +1028,21 @@ body,
   }
 }
 
+@media (min-width: 1181px) and (max-width: 1380px) {
+  .feedback-heading strong {
+    font-size: 18px;
+  }
+
+  .feedback-speaker {
+    width: 40px;
+    padding: 0;
+  }
+
+  .feedback-speaker span {
+    display: none;
+  }
+}
+
 @media (max-width: 1180px) {
   .app-shell {
     overflow: auto;
@@ -1173,6 +1197,30 @@ body,
   .feedback-panel {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .feedback-heading {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .feedback-heading strong {
+    font-size: 18px;
+  }
+
+  .feedback-speaker {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 2px;
+  }
+
+  .feedback-answer,
+  .feedback-explanation {
+    margin-left: 0;
+  }
+
+  .feedback-explanation {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .bottom-tools {

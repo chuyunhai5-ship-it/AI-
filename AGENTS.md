@@ -18,3 +18,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Include a discreet teaching-demo toggle that reveals how `body1 → post → choice → body2 → post` maps to the visible game state.
 - Maintain a 50-question Li Bai poetry bank and sample 5 unique questions at the start of every new run to simulate AI-return randomness.
 - Every question must have a verified explanation. After submission, simulate complete AI judging feedback with a verdict, answer check, question explanation, and learning suggestion for both correct and incorrect answers.
+- Student feedback readability takes priority over displaying every generated field: visually show only the verdict, correct answer, and explanation at classroom-readable sizes; keep extra coaching in data and speech instead of tiny text.
