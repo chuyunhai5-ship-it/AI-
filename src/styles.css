@@ -906,14 +906,6 @@ body,
   letter-spacing: -0.055em;
 }
 
-.start-settings {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 8px 0 38px;
-}
-
-.start-settings span,
 .result-proof span {
   display: inline-flex;
   gap: 8px;
@@ -928,13 +920,9 @@ body,
   font-weight: 800;
 }
 
-.start-settings svg {
-  width: 20px;
-  height: 20px;
-}
-
 .start-button {
   min-width: 260px;
+  margin-top: 16px;
 }
 
 .start-characters {

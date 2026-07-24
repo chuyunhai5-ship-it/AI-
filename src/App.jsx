@@ -8,13 +8,12 @@ import {
   Code,
   GraduationCap,
   Play,
-  SlidersHorizontal,
   SpeakerHigh,
   Sparkle,
   Trophy,
   XCircle,
 } from "@phosphor-icons/react";
-import { QUESTION_BANK, ROUND_COUNT, sampleQuestions } from "./questions.js";
+import { sampleQuestions } from "./questions.js";
 import { buildJudgeFeedback } from "./judgeFeedback.js";
 
 const CODE_LINES = [
@@ -142,17 +141,12 @@ function TeachingDrawer({ open, phase, onClose }) {
   );
 }
 
-function StartScreen({ onStart, bankSize, roundCount }) {
+function StartScreen({ onStart }) {
   return (
     <section className="start-screen">
       <div className="start-copy">
         <span className="eyebrow">趣 C · AI 编程第一课</span>
         <h1>AI问答大闯关</h1>
-        <div className="start-settings">
-          <span><SlidersHorizontal weight="bold" />主题：古诗词</span>
-          <span><GraduationCap weight="bold" />判题风格：鼓励型</span>
-          <span><Trophy weight="bold" />题库：{bankSize} 抽 {roundCount}</span>
-        </div>
         <button type="button" className="primary-button start-button" onClick={onStart}>
           <Play weight="fill" />
           开始闯关
@@ -244,11 +238,7 @@ export function App() {
   if (!started) {
     return (
       <main className="app-shell">
-        <StartScreen
-          onStart={startGame}
-          bankSize={QUESTION_BANK.length}
-          roundCount={ROUND_COUNT}
-        />
+        <StartScreen onStart={startGame} />
       </main>
     );
   }
