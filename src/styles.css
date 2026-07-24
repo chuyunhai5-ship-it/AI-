@@ -906,19 +906,11 @@ body,
   letter-spacing: -0.055em;
 }
 
-.start-copy > p {
-  max-width: 720px;
-  margin: 0;
-  color: #466b90;
-  font-size: 21px;
-  line-height: 1.7;
-}
-
 .start-settings {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 30px 0 38px;
+  margin: 8px 0 38px;
 }
 
 .start-settings span,
@@ -1221,10 +1213,6 @@ body,
 
   .start-copy h1 {
     font-size: 50px;
-  }
-
-  .start-copy > p {
-    font-size: 17px;
   }
 
   .start-characters {
